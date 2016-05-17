@@ -1,8 +1,11 @@
 package com.example.tick.tick;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -15,19 +18,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button stop;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     Intent intent=getIntent();
+    private MyService.mBinder binder;
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            binder = (MyService.mBinder)service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent startIntent = new Intent(this,MyService.class);
+        startService(startIntent);
+        bindService(startIntent, connection, BIND_AUTO_CREATE);
         play=(Button) findViewById(R.id.play);
-        pause=(Button) findViewById(R.id.pause);
+        //pause=(Button) findViewById(R.id.pause);
         stop=(Button) findViewById(R.id.stop);
         play.setOnClickListener(this);
-        pause.setOnClickListener(this);
+//        pause.setOnClickListener(this);
         stop.setOnClickListener(this);
-        intent.setClass(this, MyService.class);
+        //intent.setClass(this, MyService.class);
     }
 
 
@@ -37,21 +55,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             /*    if(!mediaPlayer.isPlaying()){
                     mediaPlayer.start();
                 }*/
-                Intent startIntent = new Intent(this,MyService.class);
-                startService(startIntent);
+
+                    binder.start();
+
                 break;
-            case R.id.pause:
-                if(mediaPlayer.isPlaying()){
-                    mediaPlayer.pause();
+      /*      case R.id.pause:
+                if(binder.isPlaying()) {
+                    binder.pause();
                 }
-                break;
+                break;*/
             case R.id.stop:
              /*  if(mediaPlayer.isPlaying()){
                     mediaPlayer.reset();
                     initMediaPlayer();
                 }*/
-                Intent stopIntent = new Intent(this,MyService.class);
-                stopService(stopIntent);
+                binder.stop();
                 break;
             default:
                 break;
@@ -60,7 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     protected void onDestory(){
         super.onDestroy();
-
+        Intent stopIntent = new Intent(this,MyService.class);
+        unbindService(connection);
+        stopService(stopIntent);
         }
 }
 

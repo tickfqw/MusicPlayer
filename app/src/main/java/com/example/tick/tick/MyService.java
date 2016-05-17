@@ -2,7 +2,9 @@ package com.example.tick.tick;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -16,7 +18,7 @@ import java.io.File;
  */
 public class MyService extends Service {
 
-
+    private mBinder binder = new mBinder();
     private MediaPlayer mediaPlayer = new MediaPlayer();
 
     private void initMediaPlayer() {
@@ -29,10 +31,16 @@ public class MyService extends Service {
         }
     }
 
+    @Override
+    public void unbindService(ServiceConnection conn) {
+        super.unbindService(conn);
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+
+        return binder;
     }
 
     @Override
@@ -43,7 +51,7 @@ public class MyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mediaPlayer.start();
+        //mediaPlayer.start();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -55,5 +63,25 @@ public class MyService extends Service {
             mediaPlayer.release();
         }
 
+    }
+
+    class mBinder extends Binder{
+        public void start(){
+            if(!mediaPlayer.isPlaying()){
+                mediaPlayer.start();
+            }else{
+                mediaPlayer.pause();
+            }
+        }
+        public void stop(){
+            mediaPlayer.reset();
+            initMediaPlayer();
+        }
+        public void pause(){
+            mediaPlayer.pause();
+        }
+        public boolean isPlaying(){
+            return mediaPlayer.isPlaying();
+        }
     }
 }
